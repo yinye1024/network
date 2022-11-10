@@ -1,2 +1,9 @@
-# network
- network utils for erlang 
+network
+=====
+
+An OTP library
+
+Build
+-----
+
+    $ rebar3 compile
