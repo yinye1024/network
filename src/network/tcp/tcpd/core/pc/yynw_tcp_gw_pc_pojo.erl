@@ -6,36 +6,41 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yynw_tcp_gw_api).
+-module(yynw_tcp_gw_pc_pojo).
 -author("yinye").
+
 -include_lib("yyutils/include/yyu_comm.hrl").
--include("yyu_tcp.hrl").
 
 %% API functions defined
--export([start/2,send/2, call_stop/1,cast_stop/1]).
--export([inner_send/1]).
-
+-export([new_pojo/1,get_id/1]).
+-export([get_sock/1,set_sock/2]).
+-export([get_agent/1,set_agent/2]).
 %% ===================================================================================
 %% API functions implements
 %% ===================================================================================
-start(ListenPort,GwAgent)->
-  yynw_tcp_gw_sup:start_link(),
-  yynw_tcp_listener_sup:start_link(ListenPort,GwAgent),
-  ?OK.
-
-%% send bsData inside yynw_tcp_gw_gen
-inner_send(BsData)->
-  bs_yynw_tcp_gw_mgr:send(BsData).
+new_pojo(DataId)->
+  #{
+    id => DataId,
+    sock => ?NOT_SET,
+    agent => ?NOT_SET
+  }.
 
 
-send(GwPid,BsData)->
-  yynw_tcp_gw_gen:do_send(GwPid,BsData),
-  ?OK.
+get_id(ItemMap) ->
+  yyu_map:get_value(id, ItemMap).
 
-call_stop(GwPid)->
-  yynw_tcp_gw_gen:call_stop(GwPid),
-  ?OK.
-cast_stop(GwPid)->
-  yynw_tcp_gw_gen:cast_stop(GwPid),
-  ?OK.
+
+get_sock(ItemMap) ->
+  yyu_map:get_value(sock, ItemMap).
+
+set_sock(Value, ItemMap) ->
+  yyu_map:put_value(sock, Value, ItemMap).
+
+
+get_agent(ItemMap) ->
+  yyu_map:get_value(agent, ItemMap).
+
+set_agent(Value, ItemMap) ->
+  yyu_map:put_value(agent, Value, ItemMap).
+
 

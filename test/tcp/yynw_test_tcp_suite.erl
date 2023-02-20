@@ -41,9 +41,7 @@ api_test_() ->
 start_suite() ->
   ?LOG_INFO({"api test suite start ==================="}),
   %% 启动服务端
-  gs_yynw_test_tcp_role_mgr:init(),
-  GwAgent = yynw_tcp_gw_agent:new(yynw_test_tcp_gw_agent_impl:get_mod(),yynw_test_tcp_gw_agent_impl:new()),
-  yynw_tcp_gw_api:start(?Port,GwAgent),
+  yynw_test_tcp_role_starter:start_svr(?Port),
   yyu_time:sleep(2000),
   {}.
 

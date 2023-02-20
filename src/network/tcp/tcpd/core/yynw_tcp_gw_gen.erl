@@ -11,20 +11,19 @@
 
 -behavior(gen_server).
 -include_lib("yyutils/include/yyu_comm.hrl").
+-include_lib("yyutils/include/yyu_gs.hrl").
 -include("yyu_tcp.hrl").
 
 -define(SERVER,?MODULE).
 
 -record(state,{
-  gw_agent,                                     %% 关键的业务代理，包头长度，包体长度，授权校验等
   sock,                                         %% 对应的socket
-  timeout_count =0,                             %% sock消息处理timeout次数，超过5次关闭socket
   async_recv_state :: ?WAIT_HEAD | ?WAIT_BODY    %% wait_head | wait_body 异步接收数据的状态
 }).
 
 %% API functions defined
 -export([start_link/0,get_mod/0]).
--export([active/2,do_stop/1, do_send/2,cast_fun/2,call_fun/2]).
+-export([active/2, call_stop/1, cast_stop/1,do_send/2,cast_fun/2,call_fun/2]).
 -export([init/1,handle_call/3,handle_cast/2,handle_info/2,terminate/2,code_change/3]).
 
 %% ===================================================================================
@@ -41,8 +40,10 @@ start_link()->
 active(Pid,{ClientSock,GwAgent})->
   priv_cast(Pid,{active,{ClientSock,GwAgent}}).
 
-do_stop(Pid)->
+call_stop(Pid)->
   priv_call(Pid,{stop}).
+cast_stop(Pid)->
+  priv_cast(Pid,{stop}).
 
 do_send(Pid,BsData)->
   priv_cast(Pid,{send,BsData}).
@@ -65,17 +66,19 @@ priv_cast(Pid,Req)->
 %% ===================================================================================
 init(_Args)->
   erlang:process_flag(trap_exit,true),
+  bs_yynw_tcp_gw_mgr:init(),
   {?OK,#state{}}.
 
-terminate(Reason,_State=#state{sock = Sock,gw_agent = GwAgent})->
+terminate(Reason,_State)->
   ?LOG_INFO({"gen terminate",[reason,Reason]}),
-  yynw_tcp_gw_agent:on_terminate(GwAgent),
-  yynw_tcp_helper:close_socket(Sock),
+  ?TRY_CATCH(bs_yynw_tcp_gw_mgr:terminate()),
   ?OK.
 
 code_change(_OldVsn,State,_Extra)->
   {?OK,State}.
 
+handle_call({stop},_From,State)->
+  {?STOP,?NORMAL,?OK,State};
 handle_call(Req,_From,State)->
   Reply = {"unknown gen call",[req,Req]},
   {?REPLY,Reply,State}.
@@ -86,62 +89,81 @@ handle_cast({active,{ClientSock,GwAgent}},State)->
   StateWithSock = State#state{sock = ClientSock},
   try
       ActivePackByteSize = yynw_tcp_gw_agent:get_active_pack_size(GwAgent),
-
       %% 阻塞30秒 获取激活包
       {?OK,PackData} = gen_tcp:recv(ClientSock, ActivePackByteSize,30000),
-      {?OK,NewGwAgent} = yynw_tcp_gw_agent:handle_active_pack(PackData,GwAgent),
-      HeadLength = yynw_tcp_gw_agent:get_head_byte_length(NewGwAgent),
+
+      bs_yynw_tcp_gw_mgr:do_active({ClientSock,GwAgent},PackData),
+      HeadLength = yynw_tcp_gw_agent:get_head_byte_length(GwAgent),
       {?OK,?WAIT_HEAD} = yynw_tcp_helper:async_recv_head(ClientSock,HeadLength),
-      {?NO_REPLY,StateWithSock#state{async_recv_state = ?WAIT_HEAD,gw_agent = NewGwAgent}}
+      HbTimeSpan = yynw_tcp_gw_agent:get_heartbeat_check_time_span(GwAgent),
+      erlang:send_after(HbTimeSpan,self(),{check_heartbeat}),
+      {?NO_REPLY,StateWithSock#state{async_recv_state = ?WAIT_HEAD}}
   catch
-      Error:Reason  ->
-        ?LOG_ERROR({"error when active socket",Error,Reason}),
+      Error:Reason:STK  ->
+        ?LOG_ERROR({"error when active socket",Error,Reason,{stk,STK}}),
         {?STOP,?NORMAL,State}
   end;
-handle_cast({send,BsData},State=#state{sock = ClientSocket,gw_agent = GwAgent})->
+handle_cast({send,BsData},State)->
   try
-    DataPack = yynw_tcp_gw_agent:pack_send_data(BsData,GwAgent),
-    erlang:port_command(ClientSocket, DataPack,[force]),
+    bs_yynw_tcp_gw_mgr:send(BsData),
     {?NO_REPLY,State}
   catch
-    Error:Reason  ->
-      ?LOG_ERROR({"error when send data",Error,Reason}),
+    Error:Reason:STK  ->
+      ?LOG_ERROR({"error when send data",Error,Reason,{stk,STK}}),
       {?STOP,?NORMAL,State}
   end;
+handle_cast({stop},State)->
+  {?STOP,?NORMAL,State};
 handle_cast(Req,State)->
   ?LOG_WARNING({"unknown gen cast",[req,Req]}),
   {?NO_REPLY,State}.
 
 
+handle_info({check_heartbeat},State)->
+  try
+    bs_yynw_tcp_gw_mgr:check_heartbeat(),
+    GwAgent = bs_yynw_tcp_gw_mgr:get_agent(),
+    HbTimeSpan = yynw_tcp_gw_agent:get_heartbeat_check_time_span(GwAgent),
+    erlang:send_after(HbTimeSpan,self(),{check_heartbeat}),
+    {?NO_REPLY,State}
+  catch
+    Error:Reason:STK  ->
+      ?LOG_ERROR({"error when send data",Error,Reason,{stk,STK}}),
+      {?STOP,?NORMAL,State}
+  end;
+
+
 
 %% 获取包头
 handle_info({?INET_ASYNC,ClientSocket,_Ref,{?OK,  HeadPack}},State = #state{async_recv_state = ?WAIT_HEAD })->
-  GwAgent = State#state.gw_agent,
+  GwAgent = bs_yynw_tcp_gw_mgr:get_agent(),
   BodyLength = yynw_tcp_gw_agent:get_body_byte_length(HeadPack,GwAgent),
   {?OK,?WAIT_BODY} = yynw_tcp_helper:async_recv_body(ClientSocket, BodyLength),
   {?NO_REPLY,State#state{async_recv_state = ?WAIT_BODY}};
 %% 获取包体，处理业务
 handle_info({?INET_ASYNC,ClientSocket,_Ref,{?OK,  BodyData}},State = #state{async_recv_state = ?WAIT_BODY})->
-  GwAgent = State#state.gw_agent,
-  yynw_tcp_gw_agent:route_c2s(BodyData,GwAgent),
-  HeadLength = yynw_tcp_gw_agent:get_head_byte_length(GwAgent),
-  {?OK,?WAIT_HEAD} =  yynw_tcp_helper:async_recv_head(ClientSocket,HeadLength),
-  {?NO_REPLY,State#state{async_recv_state = ?WAIT_HEAD}};
-%% 处理超时情况
-handle_info({?INET_ASYNC,_ClientSocket,_Ref,{error,timeout}},State = #state{gw_agent = GwAgent,timeout_count = TimeOutCount})->
-  case yynw_tcp_gw_agent:handle_time_out(GwAgent)  of
-    ?FAIL ->
-      {?STOP,?NORMAL,State};
-    {?OK,NewGwAgent} ->
-      {?NO_REPLY,State#state{gw_agent = NewGwAgent}}
+  try
+    bs_yynw_tcp_gw_mgr:route_c2s(BodyData),
+
+    GwAgent = bs_yynw_tcp_gw_mgr:get_agent(),
+    HeadLength = yynw_tcp_gw_agent:get_head_byte_length(GwAgent),
+    {?OK,?WAIT_HEAD} =  yynw_tcp_helper:async_recv_head(ClientSocket,HeadLength),
+    {?NO_REPLY,State#state{async_recv_state = ?WAIT_HEAD}}
+  catch
+    Error:Reason:STK  ->
+      ?LOG_ERROR({"error when route_c2s",Error,Reason,{stk,STK}}),
+      {?STOP,?NORMAL,State}
   end;
+%% 处理超时情况
+handle_info({?INET_ASYNC,_ClientSocket,_Ref,{error,timeout}},State)->
+  {?NO_REPLY,State};
 %% 处理链接关闭情况
-handle_info({?INET_ASYNC,_ClientSocket,_Ref,{error,closed}},State=#state{gw_agent = GwAgent})->
-  ?LOG_WARNING({"socket closed, {GwAgent}",{GwAgent}}),
-  {?STOP,?NORMAL,State};
+handle_info({?INET_ASYNC,_ClientSocket,_Ref,{error,closed}},_State)->
+  ?LOG_WARNING({"socket closed "}),
+  {?STOP,?NORMAL,_State};
 %% 处理别的异常
-handle_info({?INET_ASYNC,_ClientSocket,_Ref,{error,Reason}},State=#state{gw_agent = GwAgent})->
-  ?LOG_WARNING({"socket error, {GwAgent,Reason}",{GwAgent,Reason}}),
+handle_info({?INET_ASYNC,_ClientSocket,_Ref,{error,Reason}},State)->
+  ?LOG_WARNING({"socket error",{Reason}}),
   {?STOP,?NORMAL,State};
 handle_info({inet_reply,_sock,_},State)->
   {?NO_REPLY,State};

@@ -41,11 +41,11 @@ send_msg({MsgId,C2SId,BinData})->
   yynw_tcp_gw_api:send(RoleGen,{MsgId,C2SId,BinData}),
   ?OK.
 remove_tcpGen({})->
-  yynw_test_tcp_role_mgr:switch_tcp_getn(?NOT_SET),
+  yynw_test_tcp_role_mgr:switch_tcp_gen(?NOT_SET),
   ?OK.
 
 switch_tcpGen({TcpGen})->
-  yynw_test_tcp_role_mgr:switch_tcp_getn(TcpGen),
+  yynw_test_tcp_role_mgr:switch_tcp_gen(TcpGen),
   ?OK.
 
 

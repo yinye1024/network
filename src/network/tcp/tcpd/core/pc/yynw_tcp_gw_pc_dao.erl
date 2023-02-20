@@ -6,36 +6,34 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yynw_tcp_gw_api).
+-module(yynw_tcp_gw_pc_dao).
 -author("yinye").
+
+
 -include_lib("yyutils/include/yyu_comm.hrl").
--include("yyu_tcp.hrl").
+
+-define(DATA_TYPE,?MODULE).
+-define(DATA_ID,1).
 
 %% API functions defined
--export([start/2,send/2, call_stop/1,cast_stop/1]).
--export([inner_send/1]).
+-export([init/0, is_init/0,get_data/0, put_data/1]).
 
 %% ===================================================================================
 %% API functions implements
 %% ===================================================================================
-start(ListenPort,GwAgent)->
-  yynw_tcp_gw_sup:start_link(),
-  yynw_tcp_listener_sup:start_link(ListenPort,GwAgent),
+init()->
+  yyu_proc_cache_dao:init(?DATA_TYPE),
+  DataPojo = yynw_tcp_gw_pc_pojo:new_pojo(?DATA_ID),
+  yyu_proc_cache_dao:put_data(?DATA_TYPE,?DATA_ID,DataPojo),
   ?OK.
 
-%% send bsData inside yynw_tcp_gw_gen
-inner_send(BsData)->
-  bs_yynw_tcp_gw_mgr:send(BsData).
+is_init()->
+  yyu_proc_cache_dao:is_inited(?DATA_TYPE).
 
-
-send(GwPid,BsData)->
-  yynw_tcp_gw_gen:do_send(GwPid,BsData),
+put_data(DataPojo)->
+  yyu_proc_cache_dao:put_data(?DATA_TYPE,?DATA_ID,DataPojo),
   ?OK.
 
-call_stop(GwPid)->
-  yynw_tcp_gw_gen:call_stop(GwPid),
-  ?OK.
-cast_stop(GwPid)->
-  yynw_tcp_gw_gen:cast_stop(GwPid),
-  ?OK.
-
+get_data()->
+  DataPojo = yyu_proc_cache_dao:get_data(?DATA_TYPE,?DATA_ID),
+  DataPojo.

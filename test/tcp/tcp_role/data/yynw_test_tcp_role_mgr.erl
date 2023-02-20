@@ -14,7 +14,7 @@
 
 %% API functions defined
 -export([init/1]).
--export([get_tcp_gen/0,switch_tcp_getn/1]).
+-export([get_tcp_gen/0, switch_tcp_gen/1]).
 
 %% ===================================================================================
 %% API functions implements
@@ -28,7 +28,7 @@ get_tcp_gen()->
   RoleGen = yynw_test_tcp_role_pojo:get_tcp_gen(Data),
   RoleGen.
 
-switch_tcp_getn(TcpGen)->
+switch_tcp_gen(TcpGen)->
   Data = yynw_test_tcp_role_dao:get_data(),
   RoleGen = yynw_test_tcp_role_pojo:set_tcp_gen(TcpGen,Data),
   RoleGen.

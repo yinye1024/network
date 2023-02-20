@@ -108,7 +108,7 @@ handle_cast({active,ClientSock},State=#state{client_agent = ClientAgent})->
   case yynw_tcp_helper:async_recv_head(ClientSock,HeadLength) of
     {?OK,?WAIT_HEAD}->
       ActivePack = yynw_tcp_client_agent:get_active_pack(ClientAgent),
-      gen_tcp:send(ClientSock,ActivePack), %% 发送包头，登陆包， 然后等待服务端响应
+      ?OK = gen_tcp:send(ClientSock,ActivePack), %% 发送包头，登陆包， 然后阻塞等待服务端响应
       {?NO_REPLY,State#state{async_recv_state = ?WAIT_HEAD,sock = ClientSock}};
     {?ERROR,Reason}->
       ?LOG_ERROR({"error on active connection",Reason}),

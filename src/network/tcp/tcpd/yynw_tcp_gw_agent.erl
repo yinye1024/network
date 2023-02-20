@@ -17,6 +17,7 @@
 -export([get_active_pack_size/1,handle_active_pack/2,get_head_byte_length/1,get_body_byte_length/2]).
 -export([pack_send_data/2,route_c2s/2]).
 -export([handle_time_out/1,on_terminate/1]).
+-export([get_heartbeat_check_time_span/1,check_heartbeat/1]).
 
 %% ===================================================================================
 %% API functions implements
@@ -71,9 +72,30 @@ get_body_byte_length(HeadPack,ItemMap)->
 route_c2s(BodyPack,ItemMap)->
   GwMod = priv_get_gw_mod(ItemMap),
   GwData = priv_get_gw_data(ItemMap),
-  GwMod:route_c2s(BodyPack,GwData),
-  ?OK.
-%%======================= 数据包 处理 开始 ===================================================
+  {?OK,NewGwData} = GwMod:route_c2s(BodyPack,GwData),
+  NewGwAgent = priv_set_gw_data(NewGwData,ItemMap),
+  {?OK,NewGwAgent}.
+%%======================= 数据包 处理 结束 ===================================================
+
+%%======================= 心跳 相关 开始 ===================================================
+
+get_heartbeat_check_time_span(ItemMap) ->
+  GwMod = priv_get_gw_mod(ItemMap),
+  GwData = priv_get_gw_data(ItemMap),
+  GwMod:get_heartbeat_check_time_span(GwData).
+
+check_heartbeat(ItemMap)->
+  GwMod = priv_get_gw_mod(ItemMap),
+  GwData = priv_get_gw_data(ItemMap),
+  {?OK,NewGwData} = GwMod:check_heartbeat(GwData),
+  NewGwAgent = priv_set_gw_data(NewGwData,ItemMap),
+  {?OK,NewGwAgent}.
+%%======================= 心跳 相关 结束 ===================================================
+
+
+
+
+
 %% 返回 {?OK,NewGwAgent} 或者  ?FAIL
 %% NewGwAgent 会保存，?FAIL 会关闭 yynw_tcp_gw_gen 进程
 handle_time_out(ItemMap)->

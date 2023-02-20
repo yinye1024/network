@@ -14,7 +14,7 @@
 -define(ACTIVE_S2C_ID,1).
 
 %% API functions defined
--export([new/0,get_mod/0]).
+-export([new_empty/0,get_mod/0]).
 -export([get_active_pack_size/1,handle_active_pack/2,get_head_byte_length/1,get_body_byte_length/2]).
 -export([pack_send_data/2,route_c2s/2]).
 -export([handle_time_out/1,on_terminate/1]).
@@ -25,7 +25,7 @@
 get_mod()->
   ?MODULE.
 
-new()->
+new_empty()->
   #{
     roleId=>?NOT_SET,
     role_gen=>?NOT_SET,

@@ -22,7 +22,7 @@
 init()->
   case yyu_ets_cache_dao:is_inited(?ETS_CACHE_ID) of
     ?FALSE ->
-      yyu_ets_cache_dao:init_single_gen_write(?ETS_CACHE_ID),
+      yyu_ets_cache_dao:init(?ETS_CACHE_ID),
       ?OK;
     ?TRUE->?OK
   end,

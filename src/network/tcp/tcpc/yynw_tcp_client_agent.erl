@@ -32,9 +32,6 @@ priv_get_data(ItemMap) ->
   yyu_map:get_value(client_data, ItemMap).
 
 
-
-
-
 %%======================= 激活包 处理 开始 ===================================================
 get_active_pack(ItemMap)->
   ClientMod = priv_get_mod(ItemMap),
