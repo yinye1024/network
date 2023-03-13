@@ -78,6 +78,7 @@ code_change(_OldVsn,State,_Extra)->
   {?OK,State}.
 
 handle_call({stop},_From,State)->
+  ?LOG_INFO({"yynw tcp gw gen stop...."}),
   {?STOP,?NORMAL,?OK,State};
 handle_call(Req,_From,State)->
   Reply = {"unknown gen call",[req,Req]},

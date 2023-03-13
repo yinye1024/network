@@ -33,6 +33,7 @@ send(GwPid,BsData)->
   ?OK.
 
 call_stop(GwPid)->
+  ?LOG_INFO({"call stop ...",GwPid}),
   yynw_tcp_gw_gen:call_stop(GwPid),
   ?OK.
 cast_stop(GwPid)->
