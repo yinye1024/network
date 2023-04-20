@@ -92,13 +92,13 @@ priv_get_url_params(Key,Req) ->
 
 
 %%确保post数据类型为: application/x-www-form-urlencoded, 否则不要调用(其内部会调用Req:recv_body),
-%%return [{strng(), string()}].
+%%return [{strng(), string()}...].
 get_post_params(Req) ->
   Req:parse_post().
 
 %% 客户端必须 encodeURIComponent(KeyData)
 get_post_json(Key,Req) ->
-  PostData = yynw_http_utils:get_post_params(Req),
+  PostData = get_post_params(Req),
   JsonStr =
   case proplists:get_value(Key,PostData) of
     ?UNDEFINED ->?NOT_SET;
