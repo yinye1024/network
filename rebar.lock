@@ -4,9 +4,13 @@
   {git,"https://github.com/erlang-lager/lager.git",
        {ref,"8c32954cdb40791047f8f3fb4f77459af0ba573f"}},
   1},
+ {<<"mochiweb">>,
+  {git,"https://github.com/mochi/mochiweb.git",
+       {ref,"bd0c848040b57513c824b58f1c0c5e6d3d045dea"}},
+  1},
  {<<"yyutils">>,
-  {git,"https://github.com/yinye1024/yyutils.git",
-       {ref,"fedb5b1869fcaf677288700b972cf37ef8902cfb"}},
+  {path,"D:/allen_github/yinye1024/yyutils",
+        {mtime,<<"2023-06-16T10:33:42Z">>}},
   0}]}.
 [
 {pkg_hash,[

@@ -37,8 +37,7 @@ terminate()->
 do_active({ClientSock,GwAgent},PackData)->
   yynw_tcp_gw_pc_mgr:set_sock(ClientSock),
   yynw_tcp_gw_pc_mgr:set_agent(GwAgent),
-  {?OK,NewGwAgent} = yynw_tcp_gw_agent:handle_active_pack(PackData,GwAgent),
-  yynw_tcp_gw_pc_mgr:set_agent(NewGwAgent),
+  yynw_tcp_gw_agent:handle_active_pack(PackData,GwAgent),
   ?OK.
 send(BsDataList) when is_list(BsDataList)->
   priv_send_list(BsDataList);
@@ -56,14 +55,12 @@ priv_send_list([])->
 
 check_heartbeat()->
   GwAgent = yynw_tcp_gw_pc_mgr:get_agent(),
-  {?OK,NewGwAgent} = yynw_tcp_gw_agent:check_heartbeat(GwAgent),
-  yynw_tcp_gw_pc_mgr:set_agent(NewGwAgent),
+  yynw_tcp_gw_agent:check_heartbeat(GwAgent),
   ?OK.
 
 route_c2s(BodyData)->
   GwAgent = get_agent(),
-  {?OK,NewGwAgent} = yynw_tcp_gw_agent:route_c2s(BodyData,GwAgent),
-  yynw_tcp_gw_pc_mgr:set_agent(NewGwAgent),
+  yynw_tcp_gw_agent:route_c2s(BodyData,GwAgent),
   ?OK.
 
 get_agent()->

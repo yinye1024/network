@@ -6,36 +6,32 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yynw_test_tcp_client_gen_mgr).
+-module(tpl_role_mgr).
 -author("yinye").
 
-
 -include_lib("yyutils/include/yyu_comm.hrl").
--define(ETS_CACHE_ID,?MODULE).
+
 
 %% API functions defined
--export([init/0,reg/2,un_reg/1,get_pid/1]).
+-export([init/1]).
+-export([get_tcp_gen/0, switch_tcp_gen/1]).
 
 %% ===================================================================================
 %% API functions implements
 %% ===================================================================================
-init()->
-  case yyu_ets_cache_dao:is_inited(?ETS_CACHE_ID) of
-    ?FALSE ->
-      yyu_ets_cache_dao:init(?ETS_CACHE_ID),
-      ?OK;
-    ?TRUE->?OK
-  end,
+init({RoleId,TcpGen})->
+  tpl_role_dao:init({RoleId,TcpGen}),
   ?OK.
 
-reg(RoleId,RoleGen)->
-  yyu_ets_cache_dao:put_data(?ETS_CACHE_ID,RoleId,RoleGen),
-  ?OK.
+get_tcp_gen()->
+  Data = tpl_role_dao:get_data(),
+  RoleGen = tpl_role_pojo:get_tcp_gen(Data),
+  RoleGen.
 
-un_reg(RoleId)->
-  yyu_ets_cache_dao:remove(?ETS_CACHE_ID,RoleId),
-  ?OK.
+switch_tcp_gen(TcpGen)->
+  Data = tpl_role_dao:get_data(),
+  RoleGen = tpl_role_pojo:set_tcp_gen(TcpGen,Data),
+  RoleGen.
 
-get_pid(RoleId)->
-  Pid = yyu_ets_cache_dao:get_data(?ETS_CACHE_ID,RoleId),
-  Pid.
+
+

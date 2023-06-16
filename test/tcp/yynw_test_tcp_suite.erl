@@ -41,7 +41,7 @@ api_test_() ->
 start_suite() ->
   ?LOG_INFO({"api test suite start ==================="}),
   %% 启动服务端
-  yynw_test_tcp_role_starter:start_svr(?Port),
+  yynw_test_tcp_starter:start_svr(?Port),
   yyu_time:sleep(2000),
   {}.
 
@@ -60,7 +60,7 @@ stop_case({})->
   %% 清理数据
   ?LOG_INFO({"stop case ==================="}),
   gs_yynw_test_tcp_client_mgr:close(?RoleId),
-  gs_yynw_test_tcp_role_mgr:close(?RoleId),
+  gs_yynw_test_role_mgr:close(?RoleId),
   yyu_time:sleep(2000),
   ?OK.
 

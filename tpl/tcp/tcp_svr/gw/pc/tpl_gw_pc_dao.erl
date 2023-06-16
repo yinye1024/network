@@ -6,36 +6,34 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yynw_test_tcp_role_gen_mgr).
+-module(tpl_gw_pc_dao).
 -author("yinye").
 
 
 -include_lib("yyutils/include/yyu_comm.hrl").
--define(ETS_CACHE_ID,?MODULE).
+
+-define(DATA_TYPE,?MODULE).
+-define(DATA_ID,1).
 
 %% API functions defined
--export([init/0,reg/2,un_reg/1,get_pid/1]).
+-export([init/0, is_init/0,get_data/0, put_data/1]).
 
 %% ===================================================================================
 %% API functions implements
 %% ===================================================================================
 init()->
-  case yyu_ets_cache_dao:is_inited(?ETS_CACHE_ID) of
-    ?FALSE ->
-      yyu_ets_cache_dao:init(?ETS_CACHE_ID),
-      ?OK;
-    ?TRUE->?OK
-  end,
+  yyu_proc_cache_dao:init(?DATA_TYPE),
+  DataPojo = tpl_gw_pc_pojo:new_pojo(?DATA_ID),
+  yyu_proc_cache_dao:put_data(?DATA_TYPE,?DATA_ID,DataPojo),
   ?OK.
 
-reg(RoleId,RoleGen)->
-  yyu_ets_cache_dao:put_data(?ETS_CACHE_ID,RoleId,RoleGen),
+is_init()->
+  yyu_proc_cache_dao:is_inited(?DATA_TYPE).
+
+put_data(DataPojo)->
+  yyu_proc_cache_dao:put_data(?DATA_TYPE,?DATA_ID,DataPojo),
   ?OK.
 
-un_reg(RoleId)->
-  yyu_ets_cache_dao:remove(?ETS_CACHE_ID,RoleId),
-  ?OK.
-
-get_pid(RoleId)->
-  Pid = yyu_ets_cache_dao:get_data(?ETS_CACHE_ID,RoleId),
-  Pid.
+get_data()->
+  DataPojo = yyu_proc_cache_dao:get_data(?DATA_TYPE,?DATA_ID),
+  DataPojo.

@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yynw_test_tcp_role_dao).
+-module(yynw_test_role_dao).
 -author("yinye").
 
 
@@ -23,7 +23,7 @@
 %% ===================================================================================
 init({RoleId,TcpGen})->
   yyu_proc_cache_dao:init(?DATA_TYPE),
-  DataPojo = yynw_test_tcp_role_pojo:new_pojo(?DATA_ID, {RoleId,TcpGen}),
+  DataPojo = yynw_test_role_pojo:new_pojo(?DATA_ID, {RoleId,TcpGen}),
   yyu_proc_cache_dao:put_data(?DATA_TYPE,?DATA_ID,DataPojo),
   ?OK.
 

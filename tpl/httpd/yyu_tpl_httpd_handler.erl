@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yyu_exmp_httpd_handler).
+-module(yyu_tpl_httpd_handler).
 -author("yinye").
 
 -include_lib("yyutils/include/yyu_comm.hrl").

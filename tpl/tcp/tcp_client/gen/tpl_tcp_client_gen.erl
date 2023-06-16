@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yynw_test_tcp_role_gen).
+-module(tpl_tcp_client_gen).
 -author("yinye").
 
 -behavior(gen_server).
@@ -25,8 +25,8 @@
 %% ===================================================================================
 %% API functions implements
 %% ===================================================================================
-start_link({RoleId,TcpGen})->
-  gen_server:start_link(?MODULE, {RoleId,TcpGen},[]).
+start_link({RoleId,Ticket})->
+  gen_server:start_link(?MODULE, {RoleId,Ticket},[]).
 
 do_stop(Pid)->
   priv_call(Pid,{stop}).
@@ -47,14 +47,14 @@ priv_cast(Pid,Msg)->
 %% ===================================================================================
 %% Behavioural functions implements
 %% ===================================================================================
-init({RoleId,TcpGen})->
+init({RoleId,Ticket})->
   erlang:process_flag(trap_exit,true),
-  bs_yynw_test_tcp_role_mgr:init({RoleId,TcpGen}),
+  bs_tpl_tcp_client_mgr:init({RoleId,Ticket}),
   {?OK,#state{roleId = RoleId}}.
 
 terminate(Reason,_State=#state{roleId = RoleId})->
   ?LOG_INFO({"gen terminate",[reason,Reason]}),
-  ?TRY_CATCH(bs_yynw_test_tcp_role_mgr:terminate(RoleId)),
+  ?TRY_CATCH(bs_tpl_tcp_client_mgr:terminate(RoleId)),
   ?OK.
 
 code_change(_OldVsn,State,_Extra)->
@@ -94,11 +94,11 @@ do_handle_cast(Msg,State)->
 do_handle_info({stop},State)->
   {?STOP,?NORMAL,State};
 do_handle_info({persistent},State)->
-  ?TRY_CATCH(bs_yynw_test_tcp_role_mgr:persistent()),
+  ?TRY_CATCH(bs_tpl_tcp_client_mgr:persistent()),
   erlang:send_after(?GEN_PERSIST_SPAN,self(),{persistent}),
   {?NO_REPLY,State};
 do_handle_info({loop_tick},State)->
-  ?TRY_CATCH(bs_yynw_test_tcp_role_mgr:loop_tick()),
+  ?TRY_CATCH(bs_tpl_tcp_client_mgr:loop_tick()),
   erlang:send_after(?GEN_TICK_SPAN,self(),{loop_tick}),
   {?NO_REPLY,State};
 do_handle_info(Msg,State)->

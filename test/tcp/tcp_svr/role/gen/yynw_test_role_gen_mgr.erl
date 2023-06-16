@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yynw_test_tcp_client_gen_mgr).
+-module(yynw_test_role_gen_mgr).
 -author("yinye").
 
 

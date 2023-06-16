@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 28. 六月 2021 19:07
 %%%-------------------------------------------------------------------
--module(yynw_test_http_case).
+-module(yynw_test_http_suite).
 -author("yinye").
 %% yyu_comm.hrl 和 eunit.hrl 都定义了 IF 宏，eunit.hrl做了保护
 -include_lib("yyutils/include/yyu_comm.hrl").

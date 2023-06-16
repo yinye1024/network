@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yynw_test_tcp_role_sup).
+-module(tpl_role_sup).
 -author("yinye").
 
 -behavior(supervisor).
@@ -28,12 +28,12 @@ new_child({RoleId,TcpGen})->
 
 init({}) ->
   ChileSpec = #{
-    id=> yynw_test_tcp_role_gen,
-    start => {yynw_test_tcp_role_gen,start_link,[]},
+    id=> tpl_tcp_role_gen,
+    start => {tpl_tcp_role_gen,start_link,[]},
     restart => temporary,  %% 挂了就挂了，不处理
     shutdown => 20000,
     type => worker,
-    modules => [yynw_test_tcp_role_gen]
+    modules => [tpl_tcp_role_gen]
   },
   {?OK,{ {simple_one_for_one,10,10},[ChileSpec]} }.
 

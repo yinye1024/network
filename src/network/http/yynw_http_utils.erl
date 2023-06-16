@@ -31,27 +31,27 @@
 
 %% return ‘OPTIONS’ | ‘GET’ | ‘HEAD’ | ‘POST’ | ‘PUT’ | ‘DELETE’ | ‘TRACE’
 get_method(Req) ->
-  Req:get(method).
+  mochiweb_request:get(method,Req).
 
 get_client_ip(Req)->
-  Req:get(peer).
+  mochiweb_request:get(peer,Req).
 
 %% 获取raw_path.比如 http://www.XXX.cn/session/login?username=test#p,
 %% 那/session/login?username=test#p就是这个raw_path.
 get_raw_path(Req) ->
-  Req:get(raw_path).
+  mochiweb_request:get(raw_path,Req).
 
 
 %% 获取path.比如 http://www.XXX.cn/session/login?username=test#p,
 %% 那/session/login就是这个path.
 get_path(Req) ->
-  Req:get(path).
+  mochiweb_request:get(path,Req).
 
 %% 获取get参数.比如 http://www.nextim.cn/session/login?username=test#p,
 %% 则返回[{“username”,”test”}].
 %%return [{strng(), string()}].
 get_url_params(Req) ->
-  Req:parse_qs().
+  mochiweb_request:parse_qs(Req).
 
 get_url_text(Key,Req)->
   case priv_get_url_params(Key,Req) of
@@ -82,7 +82,7 @@ get_url_list(Key,Req)->
   end.
 
 priv_get_url_params(Key,Req) ->
-  ReqData = Req:parse_qs(),
+  ReqData = mochiweb_request:parse_qs(Req),
   ?LOG_INFO({reqData,ReqData}),
   case proplists:get_value(Key,ReqData) of
     ?UNDEFINED ->?NOT_SET;
@@ -91,10 +91,10 @@ priv_get_url_params(Key,Req) ->
   end.
 
 
-%%确保post数据类型为: application/x-www-form-urlencoded, 否则不要调用(其内部会调用Req:recv_body),
+%%确保post数据类型为: application/x-www-form-urlencoded, 否则不要调用(其内部会调用mochiweb_request:recv_body),
 %%return [{strng(), string()}...].
 get_post_params(Req) ->
-  Req:parse_post().
+  mochiweb_request:parse_post(Req).
 
 %% 客户端必须 encodeURIComponent(KeyData)
 get_post_json(Key,Req) ->
@@ -109,13 +109,13 @@ get_post_json(Key,Req) ->
 
 %% return [{string, string}].
 get_headers(Req)->
-  HeaderDict = Req:get(headers),
+  HeaderDict = mochiweb_request:get(headers,Req),
   KvList =   mochiweb_headers:to_list(HeaderDict),
   KvList.
 
 
 get_header_int(HeaderKey,Req)->
-  case Req:get_header_value(HeaderKey) of
+  case mochiweb_request:get_header_value(HeaderKey,Req) of
     ?UNDEFINED ->?NOT_SET;
     Value ->yyu_misc:to_integer(Value)
   end.
@@ -123,18 +123,18 @@ get_header_int(HeaderKey,Req)->
 %% 获取某个header,比如Key为”User-Agent”时，返回”Mozila…….”
 %% return  undefined | string
 get_header_value(HeaderKey,Req)->
-  case Req:get_header_value(HeaderKey) of
+  case mochiweb_request:get_header_value(HeaderKey,Req) of
     ?UNDEFINED ->?NOT_SET;
     Value ->Value
   end.
 
 %% return [{string, string}].
 get_cookies(Req)->
-  Req:parse_cookie().
+  mochiweb_request:parse_cookie(Req).
 
 %% return string
 get_cookie_value(CookieKey,Req)->
-  case Req:get_cookie_value(CookieKey) of
+  case mochiweb_request:get_cookie_value(CookieKey,Req) of
     ?UNDEFINED ->?NOT_SET;
     Value ->Value
   end.
@@ -146,7 +146,7 @@ resp_ok_with_cookie(CookieKvList,Resp,Req) ->
   HeadList = priv_get_cross_site_head_list(),
   NewHeaderList = priv_add_cookies(CookieKvList,HeadList),
   RespHeader = mochiweb_headers:make(NewHeaderList),
-  Req:respond({200, RespHeader, JsonResp}).
+  mochiweb_request:respond({200, RespHeader, JsonResp},Req).
 
 priv_add_cookies([{Key,Value}|Less],AccHeaderList) ->
 %%  mochiweb_cookies:cookie(Key, Value, [{path, "/"}]),
@@ -160,7 +160,7 @@ resp_ok(Resp,Req)->
   HeadList = priv_get_cross_site_head_list(),
   RespHeader = mochiweb_headers:make(HeadList),
   RespHeader,
-  Req:respond({200, RespHeader, JsonResp}).
+  mochiweb_request:respond({200, RespHeader, JsonResp},Req).
 
 priv_get_cross_site_head_list()->
   RespHeader = mochiweb_headers:make([
@@ -173,9 +173,9 @@ priv_get_cross_site_head_list()->
 
 resp_file(Path,DocRoot,Req)->
     "/"++FilePath = Path,
-  Req:serve_file(FilePath,DocRoot),
+  mochiweb_request:serve_file(FilePath,DocRoot,Req),
   ?OK.
 %% 重定向到
 redirect_to(NewPath,Req)->
-  Req:respond({302, [{"Location", NewPath}], ""}),
+  mochiweb_request:respond({302, [{"Location", NewPath}], ""},Req),
   ?OK.

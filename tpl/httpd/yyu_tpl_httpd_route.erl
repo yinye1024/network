@@ -6,16 +6,18 @@
 %%% @end
 %%% Created : 25. 四月 2021 19:45
 %%%-------------------------------------------------------------------
--module(yyu_exmp_httpd_route).
+-module(yyu_tpl_httpd_route).
 -author("yinye").
 
 -include_lib("yyutils/include/yyu_comm.hrl").
 
--export([route_request/2]).
+-export([get_mod/0,route_request/2]).
 
 %% ===================================================================================
 %% API functions implements
 %% ===================================================================================
+get_mod()->?MODULE.
+
 route_request(Req,DocRoot)->
   Method = mochiweb_request:get(method,Req),
   Path = "/"++Path0 = mochiweb_request:get(path,Req),
@@ -50,6 +52,6 @@ priv_do_handle(Mod,Req,Method)->
   end.
 
 priv_get_handler("test")->
-  {?OK,yyu_exmp_httpd_handler};
+  {?OK,yyu_tpl_httpd_handler};
 priv_get_handler(_Other)->
   {?FAIL,?NOT_SET}.
