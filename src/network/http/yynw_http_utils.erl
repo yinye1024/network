@@ -164,7 +164,7 @@ resp_ok(Resp,Req)->
 
 priv_get_cross_site_head_list()->
   RespHeader = mochiweb_headers:make([
-    {"Content-Type", "*"},
+    {"Content-Type", "application/json;charset=utf-8"},
     {"Access-Control-Allow-Credentials", "true"},
     {"Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE"},
     {"Access-Control-Allow-Origin", "*"},
